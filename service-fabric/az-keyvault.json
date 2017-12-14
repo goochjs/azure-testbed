@@ -1,0 +1,75 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "azure_location": {
+      "defaultValue": "uksouth",
+      "type": "String"
+    },
+    "environment": {
+      "defaultValue": "dev",
+      "type": "String"
+    },
+    "admin_user_id": {
+      "defaultValue": "6dd2d0fc-1dab-4853-8243-0bfafc91c1a7",
+      "type": "String"
+    },
+    "system_name": {
+      "defaultValue": "[concat('abc',parameters('environment'),'1')]",
+      "type": "String",
+      "metadata": {
+        "description": "3-23 chars long, lower case letters and numbers only"
+      }
+    },
+    "keyvault_name": {
+      "defaultValue": "[concat(parameters('system_name'),'-keyvault')]",
+      "type": "String"
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "comments": "Key Vault",
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyvault_name')]",
+      "apiVersion": "2015-06-01",
+      "location": "[parameters('azure_location')]",
+      "tags": {
+        "environment": "[parameters('environment')]"
+      },
+      "scale": null,
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[parameters('admin_user_id')]",
+            "permissions": {
+              "keys": [
+                "get",
+                "create",
+                "delete",
+                "list",
+                "update",
+                "import",
+                "backup",
+                "restore"
+              ],
+              "secrets": [
+                "all"
+              ]
+            }
+          }
+        ],
+        "enabledForDeployment": true,
+        "enabledForTemplateDeployment": true
+      },
+      "dependsOn": []
+    }
+  ]
+}
