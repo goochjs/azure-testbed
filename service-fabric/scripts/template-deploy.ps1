@@ -4,6 +4,7 @@
 
 param (
 	[Parameter(Mandatory=$true)][string]$azureSubscription,
+	[Parameter(Mandatory=$true)][string]$systemPrefix,
 	[Parameter(Mandatory=$true)][string]$resourceGroup,
 	[Parameter(Mandatory=$true)][string]$azureLocation,
 	[Parameter(Mandatory=$true)][string]$templateFile,
@@ -20,6 +21,10 @@ $overrideParameters = @"
         "parameters": {
             "azure_location" : {
                 "value" : "$azureLocation",
+                "type" : "String"
+            },
+						"system_prefix" : {
+                "value" : "$systemPrefix",
                 "type" : "String"
             },
 						"environment" : {

@@ -6,20 +6,24 @@
       "defaultValue": "uksouth",
       "type": "String"
     },
+    "system_prefix": {
+      "defaultValue": "abc",
+      "type": "String"
+    },
     "environment": {
       "defaultValue": "dev",
       "type": "String"
     },
-    "admin_user_id": {
-      "defaultValue": "6dd2d0fc-1dab-4853-8243-0bfafc91c1a7",
-      "type": "String"
-    },
     "system_name": {
-      "defaultValue": "[concat('abc',parameters('environment'),'1')]",
+      "defaultValue": "[concat(parameters('system_prefix'),parameters('environment'))]",
       "type": "String",
       "metadata": {
         "description": "3-23 chars long, lower case letters and numbers only"
       }
+    },
+    "admin_user_id": {
+      "defaultValue": "YOUR-ID-GOES-HERE",
+      "type": "String"
     },
     "keyvault_name": {
       "defaultValue": "[concat(parameters('system_name'),'-keyvault')]",

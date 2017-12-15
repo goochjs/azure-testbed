@@ -3,7 +3,8 @@
 # Run Login-AzureRmAccount to create a connection before executing the script
 
 param (
-	[Parameter(Mandatory=$true)][string]$resourceGroup
+	[Parameter(Mandatory=$true)][string]$resourceGroup,
+	[Parameter(Mandatory=$false)][switch]$force
 )
 
 ## Variables -----------------------------------
@@ -17,6 +18,11 @@ trap
     exit 1
 }
 
-Remove-AzureRmResourceGroup -Name $resourceGroup -Force -ErrorAction Stop
+If ( $force ) {
+	Remove-AzureRmResourceGroup -Name $resourceGroup -Force -ErrorAction Stop
+}
+else {
+	Remove-AzureRmResourceGroup -Name $resourceGroup -ErrorAction Stop
+}
 
 exit 0

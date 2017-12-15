@@ -6,12 +6,16 @@
       "defaultValue": "uksouth",
       "type": "String"
     },
+    "system_prefix": {
+      "defaultValue": "abc",
+      "type": "String"
+    },
     "environment": {
       "defaultValue": "dev",
       "type": "String"
     },
     "cluster_name": {
-      "defaultValue": "[concat('abc',parameters('environment'),'1')]",
+      "defaultValue": "[concat(parameters('system_prefix'),parameters('environment'))]",
       "type": "String",
       "metadata": {
         "description": "3-23 chars long, lower case letters and numbers only"
@@ -23,6 +27,22 @@
     },
     "vmss_capacity": {
       "defaultValue": "3",
+      "type": "String"
+    },
+    "image_publisher": {
+      "defaultValue": "MicrosoftWindowsServer",
+      "type": "String"
+    },
+    "image_offer": {
+      "defaultValue": "WindowsServer",
+      "type": "String"
+    },
+    "image_sku": {
+      "defaultValue": "2016-Datacenter-with-Containers",
+      "type": "String"
+    },
+    "image_version": {
+      "defaultValue": "latest",
       "type": "String"
     },
     "adminUser": {
@@ -41,12 +61,16 @@
       "defaultValue": "[concat(parameters('cluster_name'),'-keyvault')]",
       "type": "String"
     },
+    "keyvault_id": {
+      "defaultValue": "/subscriptions/YOUR-SUBSCRIPTION-ID/resourceGroups/KEYVAULT/providers/Microsoft.KeyVault/vaults/KEYVAULT",
+      "type": "String"
+    },
     "certificate_url": {
-      "defaultValue": "https://abcdev1-keyvault.vault.azure.net:443/secrets/clusterCert/d9428e9170714e8ba0b92dd996c82af4",
+      "defaultValue": "https://KEYVAULT.vault.azure.net:443/secrets/clusterCert/SECRET_ID",
       "type": "String"
     },
     "certificate_thumbprint": {
-      "defaultValue": "0BF840AFF8FC079826BA6C94C6EA9AF803CBDC2B",
+      "defaultValue": "YOUR-THUMBPRINT",
       "type": "String"
     },
     "vmss_name": {
@@ -68,6 +92,10 @@
     },
     "subnet_name": {
       "defaultValue": "[concat(parameters('cluster_name'),'-subnet')]",
+      "type": "String"
+    },
+    "nic_name": {
+      "defaultValue": "[concat(parameters('cluster_name'),'-nic')]",
       "type": "String"
     },
     "loadBalancer_name": {
@@ -112,6 +140,7 @@
       "scale": null,
       "properties": {
         "singlePlacementGroup": true,
+        "overprovision": false,
         "upgradePolicy": {
           "mode": "Automatic"
         },
@@ -127,7 +156,7 @@
             "secrets": [
               {
                 "sourceVault": {
-                  "id": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyvault_name'))]"
+                  "id": "[parameters('keyvault_id')]"
                 },
                 "vaultCertificates": [
                   {
@@ -152,21 +181,21 @@
               "caching": "ReadOnly"
             },
             "imageReference": {
-              "publisher": "MicrosoftWindowsServer",
-              "offer": "WindowsServer",
-              "sku": "2016-Datacenter-with-Containers",
-              "version": "latest"
+              "publisher": "[parameters('image_publisher')]",
+              "offer": "[parameters('image_offer')]",
+              "sku": "[parameters('image_sku')]",
+              "version": "[parameters('image_version')]"
             }
           },
           "networkProfile": {
             "networkInterfaceConfigurations": [
               {
-                "name": "NIC-0",
+                "name": "[parameters('nic_name')]",
                 "properties": {
                   "primary": true,
                   "ipConfigurations": [
                     {
-                      "name": "NIC-0",
+                      "name": "[parameters('nic_name')]",
                       "properties": {
                         "subnet": {
                           "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_VNet_name'), parameters('subnet_name'))]"
@@ -191,12 +220,14 @@
           "extensionProfile": {
             "extensions": [
               {
+                "name": "[concat(parameters('vmss_name'),'_ServiceFabricNode')]",
                 "properties": {
                   "publisher": "Microsoft.Azure.ServiceFabric",
                   "type": "ServiceFabricNode",
                   "typeHandlerVersion": "1.0",
                   "autoUpgradeMinorVersion": false,
                   "settings": {
+                    "clusterEndpoint": "[reference(parameters('cluster_name')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('vmss_name')]",
                     "dataPath": "D:\\\\SvcFab",
                     "durabilityLevel": "Bronze",
@@ -206,15 +237,20 @@
                       "x509StoreName": "My"
                     }
                   }
-                },
-                "name": "ServiceFabricNodeVmExt_vmNodeType0Name"
+                }
               },
               {
+                "name": "VMDiagnosticsVmExt_vmNodeType0Name",
                 "properties": {
                   "publisher": "Microsoft.Azure.Diagnostics",
                   "type": "IaaSDiagnostics",
                   "typeHandlerVersion": "1.5",
                   "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "storageAccountName": "[parameters('storageAccounts_diag2_name')]",
+                    "storageAccountKey": "[Concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccounts_diag2_name'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_diag2_name')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]",
+                    "storageAccountEndPoint": "https://core.windows.net/"
+                  },
                   "settings": {
                     "WadCfg": {
                       "DiagnosticMonitorConfiguration": {
@@ -236,19 +272,28 @@
                                 "eventDestination": "ServiceFabricReliableServiceEventTable"
                               }
                             }
+                          ],
+                          "EtwManifestProviderConfiguration": [
+                            {
+                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
+                              "scheduledTransferLogLevelFilter": "Information",
+                              "scheduledTransferKeywordFilter": "4611686018427387904",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricSystemEventTable"
+                              }
+                            }
                           ]
                         }
                       }
                     },
                     "StorageAccount": "[parameters('storageAccounts_diag2_name')]"
                   }
-                },
-                "name": "VMDiagnosticsVmExt_vmNodeType0Name"
+                }
               }
             ]
           }
-        },
-        "overprovision": false
+        }
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('uniqueStringArray')[0])]",
@@ -288,8 +333,7 @@
         "backendAddressPools": [
           {
             "name": "LoadBalancerBEAddressPool",
-            "properties": {
-            }
+            "properties": {}
           }
         ],
         "loadBalancingRules": [
@@ -621,7 +665,6 @@
       },
       "dependsOn": []
     },
-
     {
       "comments": "Storage Account",
       "type": "Microsoft.Storage/storageAccounts",
