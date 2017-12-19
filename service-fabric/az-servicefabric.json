@@ -50,7 +50,7 @@
             "type": "String"
         },
         "adminPassword": {
-            "defaultValue": "d&NtputP4ssWordh3r3",
+            "defaultValue": "SNIP",
             "type": "String"
         },
         "vnet_name": {
@@ -62,15 +62,15 @@
             "type": "String"
         },
         "keyvault_id": {
-            "defaultValue": "/subscriptions/cfe752cb-6758-490a-8e3b-5651adabac3a/resourceGroups/ukm-kv/providers/Microsoft.KeyVault/vaults/ukmdev-keyvault",
+            "defaultValue": "/subscriptions/SNIP/resourceGroups/SNIP/providers/Microsoft.KeyVault/vaults/SNIP",
             "type": "String"
         },
         "certificate_url": {
-            "defaultValue": "https://ukmdev-keyvault.vault.azure.net:443/secrets/clusterCert/bb748d438e2344329d9204670895c5cb",
+            "defaultValue": "https://SNIP.vault.azure.net:443/secrets/clusterCert/SNIP",
             "type": "String"
         },
         "certificate_thumbprint": {
-            "defaultValue": "4B817D3CF2FCBCBAB26C7877AD34572AA603ACD5",
+            "defaultValue": "SNIP",
             "type": "String"
         },
         "vmss_name": {
