@@ -91,13 +91,13 @@ trap
 }
 
 $clusterCert = Create-TestCertificate `
-                -subject "CN=Cluster Cert" `
-                -friendlyName "ClusterServerCert" `
+                -subject "CN=$vaultName Cluster Cert" `
+                -friendlyName "$($vaultName)ClusterServerCert" `
                 -password $password `
                 -filePath "ClusterServerCert.pfx"
 
 $clusterSecret = Add-CertificateToVault `
-                -secretName "clusterCert" `
+                -secretName "$($vaultName)ClusterCert" `
                 -certLocation "ClusterServerCert.pfx" `
                 -password $password `
                 -vaultName $vaultName `
